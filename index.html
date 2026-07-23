@@ -71,6 +71,10 @@ svg.cyc{display:block;width:100%;height:auto}
 .cyc .part{cursor:pointer}
 .cyc .pbody{fill:#12234a;stroke:#2f4a80;stroke-width:2;transition:.15s}
 .cyc .part:hover .pbody,.cyc .part.sel .pbody{fill:#1c3670;stroke:var(--cyan)}
+.cyc .part.correct .pbody{fill:#0b2019;stroke:var(--green);stroke-width:3}
+.cyc .part.wrong .pbody{fill:#2a1015;stroke:var(--red);stroke-width:3}
+.cyc.locked .part{cursor:default}
+.cyc.locked .part:hover .pbody{fill:#12234a;stroke:#2f4a80}
 .cyc .plabel{fill:#eaf1ff;font-size:13px;font-weight:800;text-anchor:middle;pointer-events:none}
 .cyc .pcode{fill:#22d3ee;font-size:10px;font-weight:800;text-anchor:middle;pointer-events:none}
 .cyc .flow{fill:none;stroke:#22d3ee;stroke-width:2.4;marker-end:url(#arw)}
@@ -298,6 +302,7 @@ svg.cyc{display:block;width:100%;height:auto}
       <button class="gtile" data-game="circuit"><div class="ico">🔀</div><div class="t">회로 이름 맞히기</div><div class="d">회로도를 보고 4가지 회로 중 고르기</div></button>
       <button class="gtile" data-game="cycle"><div class="ico">❄️</div><div class="t">냉동 사이클 순서</div><div class="d">냉매가 도는 순서대로 부품 배열</div></button>
       <button class="gtile" data-game="part"><div class="ico">🧩</div><div class="t">부품 역할 맞히기</div><div class="d">설명을 읽고 알맞은 부품/단자 고르기</div></button>
+      <button class="gtile" data-game="locate"><div class="ico">📍</div><div class="t">계통도 위치 찾기</div><div class="d">설명을 읽고 계통도에서 부품을 직접 클릭</div></button>
       <button class="gtile" data-game="safety"><div class="ico">🛡️</div><div class="t">안전 O · X</div><div class="d">안전 상식 빠르게 참/거짓 판단</div></button>
     </div>
   </div>
@@ -317,10 +322,11 @@ svg.cyc{display:block;width:100%;height:auto}
 <!-- ══════════ 점검 ══════════ -->
 <section id="test">
   <div id="testIntro">
-    <h2 class="sec">점검 — 졸업고사 대비 20문항</h2>
-    <p class="hint">실제 졸업고사 유형을 바탕으로 만든 20문제입니다. 한 번에 풀고 제출하면 점수·오답·해설을 확인할 수 있어요. 시간 제한은 없습니다.</p>
-    <div class="card"><p>📋 객관식 20문항 · 회로 / 계통도 / 안전<br>✅ 제출하면 채점 후 <b>선생님께 결과가 전송</b>됩니다.</p></div>
-    <button class="btn wide" id="startTest">시험 시작하기</button>
+    <h2 class="sec">점검 — 졸업고사 대비</h2>
+    <p class="hint">실제 졸업고사 유형을 바탕으로 만든 문제 은행(총 34문항)입니다. 한 번에 풀고 제출하면 점수·오답·해설을 확인할 수 있어요. 시간 제한은 없습니다.</p>
+    <div class="card"><p>📋 객관식 · 회로 / 계통도 / 안전<br>✅ 제출하면 채점 후 <b>선생님께 결과가 전송</b>됩니다.</p></div>
+    <button class="btn wide" id="startTest20" style="margin-bottom:9px">⚡ 빠른 20문항 (무작위 출제)</button>
+    <button class="btn wide ghost" id="startTestAll">📚 전체 34문항 풀기</button>
   </div>
 
   <div id="testRun" style="display:none">
@@ -416,7 +422,74 @@ function startGame(g){
   if(g==='circuit') gCircuit();
   else if(g==='cycle') gCycle();
   else if(g==='part') gPart();
+  else if(g==='locate') gLocate();
   else if(g==='safety') gSafety();
+}
+
+/* 게임용 계통도 SVG (배우기 것과 동일 배치, 마커 id만 분리) */
+var CYC_SVG='<svg class="cyc" viewBox="0 0 520 300" role="img" aria-label="냉동 사이클">'
+ +'<defs><marker id="arw2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">'
+ +'<path d="M0,0 L7,3 L0,6 Z" fill="#22d3ee"/></marker></defs>'
+ +'<path class="flow" style="marker-end:url(#arw2)" d="M120,222 L120,90"/>'
+ +'<path class="flow" style="marker-end:url(#arw2)" d="M170,66 L330,66"/>'
+ +'<path class="flow" style="marker-end:url(#arw2)" d="M400,90 L400,222"/>'
+ +'<path class="flow" style="marker-end:url(#arw2)" d="M350,246 L190,246"/>'
+ +'<g class="part" data-p="comp"><rect class="pbody" x="70" y="222" width="100" height="52" rx="10"/>'
+ +'<text class="plabel" x="120" y="244">압축기</text><text class="pcode" x="120" y="262">COMP</text></g>'
+ +'<g class="part" data-p="cond"><rect class="pbody" x="70" y="40" width="100" height="52" rx="10"/>'
+ +'<text class="plabel" x="120" y="62">응축기</text><text class="pcode" x="120" y="80">CFM</text></g>'
+ +'<g class="part" data-p="exp"><rect class="pbody" x="350" y="40" width="100" height="52" rx="10"/>'
+ +'<text class="plabel" x="400" y="68">팽창밸브</text></g>'
+ +'<g class="part" data-p="evap"><rect class="pbody" x="350" y="222" width="100" height="52" rx="10"/>'
+ +'<text class="plabel" x="400" y="244">증발기</text><text class="pcode" x="400" y="262">EFM</text></g>'
+ +'<g class="part" data-p="sv"><rect class="pbody" x="230" y="40" width="60" height="52" rx="10"/>'
+ +'<text class="plabel" x="260" y="62" style="font-size:11px">전자</text><text class="pcode" x="260" y="80">S.V</text></g>'
+ +'</svg>';
+
+/* G5 계통도 위치 찾기 — 설명을 읽고 계통도에서 부품을 직접 클릭 */
+function gLocate(){
+  openRun('📍 계통도 위치 찾기');
+  var Q=[
+    {p:'comp', ask:'냉매를 흡입해 <b>고온·고압 가스로 압축</b>하는 곳'},
+    {p:'cond', ask:'고온·고압 가스의 <b>열을 방출해 액화</b>시키는 곳'},
+    {p:'exp',  ask:'고온·고압 액냉매를 <b>저온·저압으로 단열 팽창</b>시키는 곳'},
+    {p:'evap', ask:'냉매가 <b>증발하며 주위 열을 흡수</b>(냉각)하는 곳'},
+    {p:'sv',   ask:'전원 투입 여부로 <b>개·폐되어 냉매 흐름을 통제</b>하는 곳'},
+    {p:'comp', ask:'출력단자 <b>COMP</b>(모터)에 해당하는 부품'},
+    {p:'cond', ask:'출력단자 <b>CFM</b>(팬 모터)에 해당하는 부품'},
+    {p:'evap', ask:'출력단자 <b>EFM</b>(팬 모터)에 해당하는 부품'}
+  ];
+  var rounds=shuffle(Q), i=0, miss=0;
+  function render(){
+    if(i>=rounds.length){ finish(); return; }
+    setProg(i,rounds.length);
+    var r=rounds[i];
+    GBody.innerHTML='<div class="q"><span class="num">'+(i+1)+'/'+rounds.length+'</span>'+r.ask+' — 계통도에서 눌러보세요</div>'
+      +'<div class="refbox">'+CYC_SVG+'</div>';
+    var svg=GBody.querySelector('.cyc');
+    svg.querySelectorAll('.part').forEach(function(g){
+      g.addEventListener('click',function(){
+        if(svg.classList.contains('locked')) return;
+        svg.classList.add('locked');
+        var correct=(g.dataset.p===r.p);
+        if(correct){ g.classList.add('correct'); FX.ok(g.querySelector('.pbody')); }
+        else{
+          g.classList.add('wrong'); FX.no(g.querySelector('.pbody')); miss++;
+          var right=svg.querySelector('.part[data-p="'+r.p+'"]'); if(right) right.classList.add('correct');
+          GNote.innerHTML='정답은 <b>'+PARTS[r.p].name+'</b> 입니다.';
+        }
+        setTimeout(function(){ GNote.innerHTML=''; i++; render(); }, correct?720:1250);
+      });
+    });
+  }
+  function finish(){
+    setProg(rounds.length,rounds.length); GBody.innerHTML='';
+    FX.banner({icon:miss===0?'🏆':'🎉',title:miss===0?'계통도 완벽!':'게임 완료!',
+      sub:(rounds.length-miss)+' / '+rounds.length+' 정답 · 점수 '+FX.score(),
+      stars:FX.starsFor(miss),btn:'게임 선택으로',
+      onClose:function(){document.getElementById('gBack').click();}});
+  }
+  render();
 }
 
 /* 공통: 4지선다 라운드 게임 */
@@ -577,10 +650,10 @@ var TEST=[
  {q:'이 제어회로도가 나타내는 회로는?', img:'img/interlock.png',
   o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:1,
   e:'2개 이상 회로 중 한 개만 동작시키고 나머지는 막는 인터록 회로.'},
- {q:'위 회로에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?',
+ {q:'아래 인터록 회로에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
   o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:0,
   e:'PB1 → Ry1과 RL 동작. (Ry1-b가 Ry2 회로를 차단)'},
- {q:'위 회로에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?',
+ {q:'아래 인터록 회로에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
   o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:3,
   e:'PB2 → Ry2와 GL 동작. (Ry2-b가 Ry1 회로를 차단)'},
  {q:'이 제어회로도가 나타내는 회로는?', img:'img/delay.png',
@@ -641,27 +714,74 @@ var TEST=[
      '지연=동시에 켜짐 / 일정시간=늦게 켜짐',
      '둘 다 동시에 켜지고 동시에 꺼짐','둘 다 늦게 켜지고 늦게 꺼짐',
      '지연=늦게 꺼짐 / 일정시간=늦게 켜짐'],a:0,
-  e:'지연동작=설정 시간 후 동작(늦게 ON), 일정시간동작=동시에 ON·설정 시간 후 정지(늦게 OFF).'}
+  e:'지연동작=설정 시간 후 동작(늦게 ON), 일정시간동작=동시에 ON·설정 시간 후 정지(늦게 OFF).'},
+ {q:'자기 유지 회로에서 <b>정지(복귀)</b>시키는 푸시버튼은?', img:'img/self-hold.png',
+  o:['PB1','PB2','RL','Ry-a','N.F.B'],a:1,
+  e:'PB1은 기동(ON), PB2는 정지(OFF). 자기유지접점 Ry-a가 유지시켜 줌.'},
+ {q:'인터록 회로에서 상대 회로를 <b>동작하지 못하게 막는</b> 접점은?',
+  o:['a접점','c접점','b접점','타이머 접점','열동 접점'],a:2,
+  e:'상대 릴레이의 b접점(Ry1-b, Ry2-b)이 서로의 회로를 차단.'},
+ {q:'지연 동작 회로·일정 시간 동작 회로에 <b>반드시 필요한</b> 소자는?',
+  o:['퓨즈','다이오드','타이머(T)','콘덴서','열동계전기'],a:2,
+  e:'설정 시간을 만드는 타이머(T)가 핵심 소자.'},
+ {q:'증발기에서 냉매가 하는 작용으로 옳은 것은?',
+  o:['열을 방출한다','냉매를 압축한다','주위의 열을 흡수(냉각)한다','냉매를 응축시킨다','냉매를 팽창시킨다'],a:2,
+  e:'증발기: 저압 액냉매가 증발하며 주위 열을 흡수 → 냉각 효과.'},
+ {q:'응축기에서 일어나는 냉매의 <b>상태 변화</b>는?',
+  o:['액체 → 기체','고체 → 액체','변화 없음','기체 → 액체','기체 → 고체'],a:3,
+  e:'응축기: 고온·고압 가스가 열을 방출하며 액체로 응축(기체→액체).'},
+ {q:'팽창밸브를 통과한 직후 냉매의 상태로 옳은 것은?',
+  o:['고온·고압','고온·저압','저온·고압','상온·상압','저온·저압'],a:4,
+  e:'팽창밸브는 고온·고압 액냉매를 저온·저압으로 단열 팽창시킴.'},
+ {q:'냉매의 <b>흐름과 충전량을 눈으로 확인</b>하는 것은?',
+  o:['수액기','필터 드라이어','팽창밸브','압축기','액면계(사이트글라스)'],a:4,
+  e:'액면계(사이트 글라스)로 냉매 흐름·기포·충전 상태를 확인.'},
+ {q:'응축된 <b>액체 냉매를 저장</b>하는 것은?',
+  o:['응축기','수액기(리시버)','증발기','압축기','전자밸브'],a:1,
+  e:'수액기(리시버)는 액냉매를 모아 저장했다가 필요량을 공급.'},
+ {q:'냉동 사이클에서 <b>압축기 바로 다음</b>에 오는 것은?',
+  o:['증발기','응축기','팽창밸브','전자밸브','수액기'],a:1,
+  e:'압축기 → 응축기 → 팽창밸브 → 증발기 순.'},
+ {q:'다음 중 전기 화재를 <b>예방</b>하기 위한 것은?',
+  o:['누전','합선','접지','과전류','설비 노후'],a:2,
+  e:'접지는 화재·감전을 예방. 나머지는 화재의 원인.'},
+ {q:'가스가 새는 것을 발견했을 때 <b>가장 먼저</b> 할 일은?',
+  o:['환기팬을 켠다','전등을 켜서 확인한다','밸브를 잠그고 창문을 열어 환기한다','성냥불로 새는 곳을 찾는다','그대로 계속 사용한다'],a:2,
+  e:'스위치·불꽃은 폭발 위험! 밸브를 잠그고 창문으로 자연 환기.'},
+ {q:'안전장치에 대한 설명으로 <b>옳은</b> 것은?',
+  o:['작업에 방해되면 제거한다','작업 전 반드시 점검한다','불량해도 그대로 사용한다','점검할 필요가 없다','작업이 끝난 뒤에만 점검한다'],a:1,
+  e:'안전장치는 작업 전 반드시 점검하고, 임의 제거 금지.'},
+ {q:'출력단자 <b>COMP</b>는 무엇의 모터 출력 단자인가?',
+  o:['응축기','압축기','증발기','실내기','송풍기'],a:1,
+  e:'COMP = 압축기 모터의 출력 단자.'},
+ {q:'전기 화재의 <b>원인</b>에 해당하는 것끼리 묶인 것은?',
+  o:['누전·합선·과전류·설비 노후','접지·누전·합선·과전류','접지·절연·차단·환기','냉각·압축·응축·팽창','점검·정비·교체·청소'],a:0,
+  e:'전기 화재 원인 4가지: 누전·합선(단락)·과전류·설비 노후.'}
 ];
 
 var testAns=[];
+var QT=[];               // 이번 회차에 실제 출제된 문항
+var lastCount=20;        // 다시 풀기 때 같은 모드 유지
 var LETTERS=['①','②','③','④','⑤'];
-document.getElementById('startTest').addEventListener('click',buildTest);
+document.getElementById('startTest20').addEventListener('click',function(){buildTest(20);});
+document.getElementById('startTestAll').addEventListener('click',function(){buildTest(0);});
 document.getElementById('rRetry').addEventListener('click',function(){
-  document.getElementById('testResult').style.display='none'; buildTest();
+  document.getElementById('testResult').style.display='none'; buildTest(lastCount);
 });
 document.getElementById('rReview').addEventListener('click',function(){
   var rl=document.getElementById('reviewList');
   rl.style.display = rl.style.display==='none'||!rl.style.display ? 'block':'none';
 });
 
-function buildTest(){
-  testAns=new Array(TEST.length).fill(-1);
+function buildTest(count){
+  lastCount=count;
+  QT = count ? shuffle(TEST).slice(0,count) : TEST.slice();
+  testAns=new Array(QT.length).fill(-1);
   document.getElementById('testIntro').style.display='none';
   document.getElementById('testResult').style.display='none';
   document.getElementById('testRun').style.display='block';
   var html='';
-  TEST.forEach(function(t,i){
+  QT.forEach(function(t,i){
     html+='<div class="tq" data-i="'+i+'"><div class="qh"><span class="n">'+(i+1)+'.</span>'+t.q+'</div>';
     if(t.img) html+='<div class="qimg"><img src="'+t.img+'" alt=""></div>';
     html+='<div class="tos">';
@@ -694,7 +814,7 @@ document.getElementById('submitTest').addEventListener('click',function(){
 function gradeTest(){
   var correct=0, wrong=[];
   document.querySelectorAll('#testList .tq').forEach(function(tq){
-    var i=+tq.dataset.i, t=TEST[i], pick=testAns[i];
+    var i=+tq.dataset.i, t=QT[i], pick=testAns[i];
     tq.classList.add('graded');
     tq.querySelectorAll('.to').forEach(function(b){
       var k=+b.dataset.k; b.disabled=true;
@@ -704,7 +824,7 @@ function gradeTest(){
     tq.querySelector('.expl').innerHTML='💡 정답 '+LETTERS[t.a]+' — '+t.e;
     if(pick===t.a) correct++; else wrong.push(i+1);
   });
-  var total=TEST.length, score=Math.round(correct/total*100);
+  var total=QT.length, score=Math.round(correct/total*100);
   document.getElementById('testRun').style.display='none';
   document.getElementById('testResult').style.display='block';
   document.getElementById('rScore').textContent=score+'점';
@@ -718,9 +838,8 @@ function gradeTest(){
   };
   document.getElementById('rReview').textContent='시험지에서 오답·해설 보기';
   window.scrollTo({top:0,behavior:'smooth'});
-  if(score===100) FX.banner({icon:'🏆',title:'만점!',sub:'20문제 전부 정답이에요!',stars:3,btn:'결과 제출하기',
+  if(score===100) FX.banner({icon:'🏆',title:'만점!',sub:total+'문제 전부 정답이에요!',stars:3,btn:'결과 제출하기',
       onClose:submitResult});
-  else setTimeout(function(){},0);
   // 결과 제출
   window.__lastResult={score:score,correct:correct,total:total,wrong:wrong};
   if(score!==100) setTimeout(submitResult,600);
