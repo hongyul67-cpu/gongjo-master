@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>공조냉동 자동제어 마스터</title>
+<style>
+:root{
+  --bg:#070d1a; --panel:#0d1a33; --panel2:#111f3d; --line:#243456;
+  --ink:#eaf1ff; --sub:#9db0d6; --cyan:#22d3ee; --blue:#2563eb;
+  --green:#34d399; --amber:#fbbf24; --red:#fb7185; --violet:#a78bfa;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(1200px 700px at 50% -12%,#12234a 0%,var(--bg) 60%);
+  color:var(--ink);font-family:system-ui,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;
+  -webkit-text-size-adjust:100%;min-height:100vh;padding-bottom:60px}
+a{color:inherit}
+.wrap{max-width:860px;margin:0 auto;padding:0 14px}
+
+/* header */
+header{padding:22px 0 8px;text-align:center}
+header .badge{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.4px;
+  color:var(--cyan);background:#0c2036;border:1px solid #1d3a58;border-radius:999px;padding:5px 12px}
+header h1{margin:10px 0 4px;font-size:25px;font-weight:900;letter-spacing:-.5px}
+header p{margin:0;color:var(--sub);font-size:13px}
+
+/* tabs */
+nav.tabs{position:sticky;top:0;z-index:40;background:rgba(7,13,26,.86);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-top:14px}
+nav.tabs .in{max-width:860px;margin:0 auto;display:flex;gap:6px;padding:8px 10px}
+nav.tabs button{flex:1;border:1px solid transparent;background:transparent;color:var(--sub);
+  font-family:inherit;font-weight:800;font-size:14px;padding:10px 6px;border-radius:12px;cursor:pointer}
+nav.tabs button.on{color:var(--ink);background:var(--panel);border-color:var(--line)}
+nav.tabs button .e{font-size:16px;margin-right:4px}
+
+section{display:none;padding-top:16px}
+section.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+h2.sec{font-size:16px;margin:22px 2px 10px;color:var(--ink);font-weight:900}
+h2.sec:first-child{margin-top:4px}
+.hint{color:var(--sub);font-size:12.5px;margin:0 2px 12px;line-height:1.6}
+
+/* cards */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:16px;margin-bottom:12px}
+.card h3{margin:0 0 6px;font-size:16px;font-weight:900}
+.card p{margin:0;color:#c7d4ef;font-size:13.5px;line-height:1.7}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.tag{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--sub)}
+.tag.cy{color:var(--cyan);border-color:#1d3a58;background:#0c2036}
+.tag.gr{color:var(--green);border-color:#14402f;background:#0b2019}
+.tag.am{color:var(--amber);border-color:#3a2f10;background:#20180a}
+
+.diagram{background:#f7fafc;border-radius:12px;padding:10px;text-align:center;margin:4px 0 12px}
+.diagram img{max-width:100%;height:auto;border-radius:6px;display:block;margin:0 auto}
+.diagram .cap{color:#334155;font-size:11.5px;font-weight:700;margin-top:6px}
+
+.def{background:var(--panel2);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;
+  padding:11px 13px;font-size:13.5px;line-height:1.75;color:#d6e2ff;margin-top:10px}
+.def b{color:var(--cyan)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px;margin-top:6px}
+.kv .k{color:var(--amber);font-weight:800;white-space:nowrap}
+.kv .v{color:#d6e2ff;line-height:1.6}
+
+/* refrigeration svg */
+.refbox{background:#0a1428;border:1px solid var(--line);border-radius:14px;padding:6px;margin-bottom:10px}
+svg.cyc{display:block;width:100%;height:auto}
+.cyc .part{cursor:pointer}
+.cyc .pbody{fill:#12234a;stroke:#2f4a80;stroke-width:2;transition:.15s}
+.cyc .part:hover .pbody,.cyc .part.sel .pbody{fill:#1c3670;stroke:var(--cyan)}
+.cyc .plabel{fill:#eaf1ff;font-size:13px;font-weight:800;text-anchor:middle;pointer-events:none}
+.cyc .pcode{fill:#22d3ee;font-size:10px;font-weight:800;text-anchor:middle;pointer-events:none}
+.cyc .flow{fill:none;stroke:#22d3ee;stroke-width:2.4;marker-end:url(#arw)}
+.cyc .flowlab{fill:#9db0d6;font-size:10px;text-anchor:middle}
+.partinfo{min-height:52px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;font-size:13px;line-height:1.65;color:#d6e2ff}
+.partinfo b{color:var(--cyan)}
+
+/* game tiles on play home */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.gtile{text-align:left;background:linear-gradient(150deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:16px;padding:15px;cursor:pointer;
+  font-family:inherit;color:var(--ink);transition:.15s}
+.gtile:hover{border-color:var(--cyan);transform:translateY(-2px)}
+.gtile .ico{font-size:24px}
+.gtile .t{font-weight:900;font-size:15px;margin-top:6px}
+.gtile .d{color:var(--sub);font-size:12px;margin-top:3px;line-height:1.5}
+
+/* game runtime */
+.gwrap{display:none}
+.gwrap.on{display:block}
+.gtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.gback{border:1px solid var(--line);background:var(--panel);color:var(--sub);
+  border-radius:10px;padding:8px 12px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+.gtitle{font-weight:900;font-size:15px}
+.hud{margin:0 0 12px}
+.prog{height:7px;background:#0c1730;border-radius:99px;overflow:hidden;margin:0 0 14px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:.3s}
+
+.q{font-size:16px;font-weight:800;line-height:1.5;margin:0 0 14px}
+.q .num{color:var(--cyan);font-weight:900;margin-right:6px}
+.opts{display:grid;gap:9px}
+.opt{width:100%;text-align:left;border:1.5px solid var(--line);background:var(--panel);
+  color:var(--ink);font-family:inherit;font-size:14.5px;font-weight:700;
+  padding:13px 15px;border-radius:12px;cursor:pointer;transition:.12s;line-height:1.45}
+.opt:hover{border-color:#3a5a92}
+.opt.ok{border-color:var(--green);background:#0b2019;color:#a7f3d0}
+.opt.no{border-color:var(--red);background:#2a1015;color:#fecdd3}
+.opt.dim{opacity:.5}
+.opt:disabled{cursor:default}
+
+.oxrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.oxbtn{border:2px solid var(--line);background:var(--panel);color:var(--ink);
+  font-family:inherit;font-weight:900;font-size:22px;padding:20px;border-radius:16px;cursor:pointer}
+.oxbtn.o:hover{border-color:var(--green)}
+.oxbtn.x:hover{border-color:var(--red)}
+
+/* order game */
+.orderline{display:flex;gap:8px;flex-wrap:wrap;min-height:56px;background:var(--panel2);
+  border:1.5px dashed var(--line);border-radius:12px;padding:10px;margin-bottom:14px;align-items:center}
+.orderline .slot{color:var(--sub);font-size:13px}
+.chip{border:1.5px solid var(--line);background:var(--panel);color:var(--ink);
+  font-family:inherit;font-weight:800;font-size:14px;padding:11px 15px;border-radius:12px;cursor:pointer}
+.chip:hover{border-color:var(--cyan)}
+.chip.placed{background:#0c2036;border-color:var(--cyan);color:var(--cyan)}
+.pool{display:flex;gap:8px;flex-wrap:wrap}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:99px;background:var(--cyan);color:#04121f;font-weight:900;font-size:12px;margin-right:6px}
+
+.gnote{color:var(--sub);font-size:12.5px;margin-top:10px;line-height:1.6;text-align:center}
+
+/* test */
+.tq{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:11px}
+.tq .qh{font-size:15px;font-weight:800;line-height:1.55;margin-bottom:4px}
+.tq .qh .n{color:var(--cyan);font-weight:900;margin-right:5px}
+.tq .qimg{background:#f7fafc;border-radius:10px;padding:8px;text-align:center;margin:8px 0}
+.tq .qimg img{max-width:100%;max-height:230px;height:auto}
+.tq .tos{display:grid;gap:7px;margin-top:9px}
+.tos .to{border:1.5px solid var(--line);background:#0a1428;color:var(--ink);
+  font-family:inherit;font-size:14px;font-weight:600;text-align:left;padding:11px 13px;
+  border-radius:10px;cursor:pointer;line-height:1.4}
+.tos .to.pick{border-color:var(--cyan);background:#0c2036;color:var(--cyan)}
+.tos .to.correct{border-color:var(--green);background:#0b2019;color:#a7f3d0}
+.tos .to.wrong{border-color:var(--red);background:#2a1015;color:#fecdd3}
+.tos .to .lab{color:var(--sub);font-weight:900;margin-right:8px}
+.tq .expl{margin-top:9px;font-size:12.5px;color:#bcd0f5;background:var(--panel2);
+  border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:9px 11px;line-height:1.6;display:none}
+.tq.graded .expl{display:block}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:13px;
+  font-family:inherit;font-weight:900;font-size:15px;padding:14px 20px;cursor:pointer;color:#fff;
+  background:linear-gradient(135deg,#0ea5e9,#2563eb)}
+.btn:active{transform:translateY(1px)}
+.btn.wide{width:100%}
+.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--sub)}
+.btn:disabled{opacity:.5;cursor:default}
+
+.scorebar{background:linear-gradient(150deg,#13244d,#0c1730);border:1px solid #2f4a80;
+  border-radius:16px;padding:18px;text-align:center;margin-bottom:14px}
+.scorebar .big{font-size:38px;font-weight:900;color:var(--cyan);line-height:1}
+.scorebar .sub{color:var(--sub);font-size:13px;margin-top:6px}
+.footer{color:#5c6f96;font-size:11.5px;text-align:center;padding:26px 0 8px;line-height:1.7}
+.footer a{color:#7d93bd}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">에너지제어과 · 공조냉동</div>
+  <h1>공조냉동 자동제어 마스터</h1>
+  <p>시퀀스 제어 회로 · 표준 냉동 계통도 · 안전</p>
+</header>
+
+<nav class="tabs">
+  <div class="in">
+    <button data-tab="learn" class="on"><span class="e">📖</span>배우기</button>
+    <button data-tab="play"><span class="e">🎮</span>게임</button>
+    <button data-tab="test"><span class="e">📝</span>점검</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ══════════ 배우기 ══════════ -->
+<section id="learn" class="on">
+
+  <h2 class="sec">① 시퀀스 제어 회로 4가지</h2>
+  <p class="hint">푸시버튼·릴레이·타이머로 만든 기본 회로입니다. 그림은 실제 시험에 나오는 회로도예요. 이름과 동작을 짝지어 기억하세요.</p>
+
+  <div class="card">
+    <div class="tagrow"><span class="tag cy">자기유지</span><span class="tag">Ry-a</span></div>
+    <h3>자기 유지 회로</h3>
+    <div class="diagram"><img src="img/self-hold.png" alt="자기유지 회로도"><div class="cap">자기 유지 회로도</div></div>
+    <div class="def">푸시버튼처럼 <b>순간 동작</b>으로 만들어진 입력 신호가 전자접촉기에 가해지면,
+      입력 신호가 <b>제거되어도 동작을 계속 지켜주는</b> 회로.</div>
+    <div class="kv"><span class="k">자기유지접점</span><span class="v"><b style="color:var(--amber)">Ry-a</b> (릴레이 a접점) — PB1과 병렬로 붙어 스스로 전류를 유지</div>
+      <span class="k">기동 / 정지</span><span class="v">PB1 = 기동(ON), PB2 = 정지(OFF)</span></div>
+  </div>
+
+  <div class="card">
+    <div class="tagrow"><span class="tag cy">인터록</span><span class="tag">Ry-b</span></div>
+    <h3>인터록 회로</h3>
+    <div class="diagram"><img src="img/interlock.png" alt="인터록 회로도"><div class="cap">인터록 회로도</div></div>
+    <div class="def"><b>2개 이상의 회로</b> 중에서 <b>한 개 회로만 동작</b>시키고,
+      나머지 회로는 동작할 수 없도록 서로 막아 주는(선입 우선) 회로.</div>
+    <div class="kv">
+      <span class="k">PB1 누르면</span><span class="v">Ry1 · <b style="color:var(--red)">RL</b> 동작 (Ry1-b가 Ry2 회로를 차단)</span>
+      <span class="k">PB2 누르면</span><span class="v">Ry2 · <b style="color:var(--green)">GL</b> 동작 (Ry2-b가 Ry1 회로를 차단)</span>
+      <span class="k">막는 접점</span><span class="v">상대 릴레이의 <b style="color:var(--amber)">b접점(Ry1-b, Ry2-b)</b></span></div>
+  </div>
+
+  <div class="card">
+    <div class="tagrow"><span class="tag cy">지연동작</span><span class="tag">타이머 T</span></div>
+    <h3>지연 동작 회로 (한시동작)</h3>
+    <div class="diagram"><img src="img/delay.png" alt="지연동작 회로도"><div class="cap">지연 동작 회로도 · 타임차트</div></div>
+    <div class="def">타이머에 의해 <b>설정된 시간만큼 늦게 동작</b>하는 회로.
+      동작은 늦지만 <b>복귀는 타이머 코일과 함께</b> 된다. PB1을 ON–OFF 조작하면
+      설정한 일정 시간 뒤에 부하가 동작.</div>
+  </div>
+
+  <div class="card">
+    <div class="tagrow"><span class="tag cy">일정시간동작</span><span class="tag">타이머 T</span></div>
+    <h3>일정 시간 동작 회로 (한시복귀)</h3>
+    <div class="diagram"><img src="img/fixedtime.png" alt="일정시간동작 회로도"><div class="cap">일정 시간 동작 회로도 · 타임차트</div></div>
+    <div class="def"><b>동시에 동작</b>하고 <b>늦게 복귀</b>되는 회로.
+      PB를 ON–OFF 조작함과 동시에 부하가 동작하고,
+      타이머의 <b>시간 설정 후에 정지</b>(복귀)한다.</div>
+    <div class="def" style="border-color:var(--amber);margin-top:8px">
+      💡 <b style="color:var(--amber)">헷갈리지 마세요</b> — 지연동작 = <b>늦게 켜짐</b>, 일정시간동작 = <b>동시에 켜지고 늦게 꺼짐</b>.</div>
+  </div>
+
+  <h2 class="sec">② 표준 냉동 시스템 계통도</h2>
+  <p class="hint">부품을 눌러 역할을 확인하세요. 냉매는 <b style="color:var(--cyan)">압축기 → 응축기 → 팽창밸브 → 증발기</b> 순으로 순환합니다.</p>
+
+  <div class="refbox">
+    <svg class="cyc" viewBox="0 0 520 300" role="img" aria-label="냉동 사이클">
+      <defs><marker id="arw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#22d3ee"/></marker></defs>
+      <!-- flow loop -->
+      <path class="flow" d="M120,222 L120,90"/>
+      <path class="flow" d="M170,66 L330,66"/>
+      <path class="flow" d="M400,90 L400,222"/>
+      <path class="flow" d="M350,246 L190,246"/>
+      <text class="flowlab" x="70" y="150">고압가스</text>
+      <text class="flowlab" x="250" y="54">고압액</text>
+      <text class="flowlab" x="452" y="150">저압액</text>
+      <text class="flowlab" x="270" y="266">저압가스</text>
+      <!-- parts -->
+      <g class="part" data-p="comp"><rect class="pbody" x="70" y="222" width="100" height="52" rx="10"/>
+        <text class="plabel" x="120" y="244">압축기</text><text class="pcode" x="120" y="262">COMP</text></g>
+      <g class="part" data-p="cond"><rect class="pbody" x="70" y="40" width="100" height="52" rx="10"/>
+        <text class="plabel" x="120" y="62">응축기</text><text class="pcode" x="120" y="80">CFM</text></g>
+      <g class="part" data-p="exp"><rect class="pbody" x="350" y="40" width="100" height="52" rx="10"/>
+        <text class="plabel" x="400" y="68">팽창밸브</text></g>
+      <g class="part" data-p="evap"><rect class="pbody" x="350" y="222" width="100" height="52" rx="10"/>
+        <text class="plabel" x="400" y="244">증발기</text><text class="pcode" x="400" y="262">EFM</text></g>
+      <g class="part" data-p="sv"><rect class="pbody" x="230" y="40" width="60" height="52" rx="10"/>
+        <text class="plabel" x="260" y="62" style="font-size:11px">전자</text><text class="pcode" x="260" y="80">S.V</text></g>
+    </svg>
+  </div>
+  <div class="partinfo" id="partInfo">👆 부품을 눌러 보세요. 각 부품의 역할과 출력 단자 기호가 나옵니다.</div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>실제 계통도 & 출력 단자</h3>
+    <div class="diagram"><img src="img/refrig-system.jpg" alt="표준 냉동 시스템 계통도"><div class="cap">표준 냉동 시스템의 계통도</div></div>
+    <div class="kv">
+      <span class="k">COMP</span><span class="v">압축기 모터의 출력 단자</span>
+      <span class="k">CFM</span><span class="v">응축기 팬 모터의 출력 단자</span>
+      <span class="k">EFM</span><span class="v">증발기 팬 모터의 출력 단자</span>
+      <span class="k">S.V</span><span class="v">냉동 실험 장치 주배관용 전자밸브 출력 단자</span>
+    </div>
+  </div>
+
+  <h2 class="sec">③ 안전</h2>
+  <div class="card">
+    <div class="tagrow"><span class="tag am">전기화재</span><span class="tag am">안전관리</span><span class="tag am">가스</span></div>
+    <div class="kv">
+      <span class="k">전기화재 원인</span><span class="v">① 누전 &nbsp;② 합선(단락) &nbsp;③ 과전류 &nbsp;④ 설비 노후 <br><span style="color:var(--sub)">(※ 접지는 화재를 <b style="color:var(--red)">예방</b>하는 것 — 원인 아님)</span></span>
+      <span class="k">안전관리 목적</span><span class="v">사고의 <b style="color:var(--amber)">미연 방지</b></span>
+      <span class="k">가스 안전수칙</span><span class="v">비눗물로 누출 확인 · 이상 시 전문가 · 점화 확인 · 사용 전 냄새·환기 · <b>사용 후 밸브 잠금</b></span>
+      <span class="k">안전장치 취급</span><span class="v">작업 전 점검 · 결함 항상 점검 · 불량 시 즉시 수정 · 주의/통제사항 준수 <br><span style="color:var(--sub)">(※ 부득이해도 <b style="color:var(--red)">임의 제거 금지</b>)</span></span>
+    </div>
+  </div>
+
+  <p class="hint" style="text-align:center;margin-top:18px">준비됐나요? 위 <b>🎮 게임</b>으로 재미있게 익히고 <b>📝 점검</b>으로 확인해요.</p>
+</section>
+
+<!-- ══════════ 게임 ══════════ -->
+<section id="play">
+  <div id="playHome">
+    <h2 class="sec">게임으로 익히기</h2>
+    <p class="hint">4가지 미니게임. 콤보를 이어 별 3개에 도전!</p>
+    <div class="grid2">
+      <button class="gtile" data-game="circuit"><div class="ico">🔀</div><div class="t">회로 이름 맞히기</div><div class="d">회로도를 보고 4가지 회로 중 고르기</div></button>
+      <button class="gtile" data-game="cycle"><div class="ico">❄️</div><div class="t">냉동 사이클 순서</div><div class="d">냉매가 도는 순서대로 부품 배열</div></button>
+      <button class="gtile" data-game="part"><div class="ico">🧩</div><div class="t">부품 역할 맞히기</div><div class="d">설명을 읽고 알맞은 부품/단자 고르기</div></button>
+      <button class="gtile" data-game="safety"><div class="ico">🛡️</div><div class="t">안전 O · X</div><div class="d">안전 상식 빠르게 참/거짓 판단</div></button>
+    </div>
+  </div>
+
+  <div class="gwrap" id="gameRun">
+    <div class="gtop">
+      <button class="gback" id="gBack">← 게임 선택</button>
+      <div class="gtitle" id="gName"></div>
+    </div>
+    <div class="hud" id="gHud"></div>
+    <div class="prog"><i id="gProg"></i></div>
+    <div id="gBody"></div>
+    <div class="gnote" id="gNote"></div>
+  </div>
+</section>
+
+<!-- ══════════ 점검 ══════════ -->
+<section id="test">
+  <div id="testIntro">
+    <h2 class="sec">점검 — 졸업고사 대비 20문항</h2>
+    <p class="hint">실제 졸업고사 유형을 바탕으로 만든 20문제입니다. 한 번에 풀고 제출하면 점수·오답·해설을 확인할 수 있어요. 시간 제한은 없습니다.</p>
+    <div class="card"><p>📋 객관식 20문항 · 회로 / 계통도 / 안전<br>✅ 제출하면 채점 후 <b>선생님께 결과가 전송</b>됩니다.</p></div>
+    <button class="btn wide" id="startTest">시험 시작하기</button>
+  </div>
+
+  <div id="testRun" style="display:none">
+    <div id="testList"></div>
+    <button class="btn wide" id="submitTest">채점하고 제출하기</button>
+  </div>
+
+  <div id="testResult" style="display:none">
+    <div class="scorebar">
+      <div class="big" id="rScore">0</div>
+      <div class="sub" id="rSub"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn ghost" style="flex:1" id="rReview">오답 · 해설 보기</button>
+      <button class="btn" style="flex:1" id="rRetry">다시 풀기</button>
+    </div>
+    <div id="reviewList"></div>
+  </div>
+</section>
+
+<div class="footer">
+  공조냉동 자동제어 마스터 · 에너지제어과<br>
+  회로도 · 계통도 자료 출처: 교내 수업 자료(2016 졸업고사)
+</div>
+</div>
+
+<!-- 결과 제출 위젯 -->
+<script src="https://hongyul67-cpu.github.io/links/collector.js"
+        data-tool="공조냉동 자동제어 점검"
+        data-max-num="40"></script>
+<script src="fx.js"></script>
+<script>
+/* ═══════════════ 데이터 ═══════════════ */
+var CIRCUITS = {
+  self:   {name:"자기 유지 회로",   img:"img/self-hold.png"},
+  inter:  {name:"인터록 회로",       img:"img/interlock.png"},
+  delay:  {name:"지연 동작 회로",     img:"img/delay.png"},
+  fixed:  {name:"일정 시간 동작 회로", img:"img/fixedtime.png"}
+};
+var PARTS = {
+  comp:{name:"압축기",   code:"COMP", role:"저온·저압의 냉매 가스를 흡입해 <b>고온·고압 가스</b>로 압축한다. 출력단자 <b>COMP</b> = 압축기 모터."},
+  cond:{name:"응축기",   code:"CFM",  role:"고온·고압 가스의 열을 밖으로 방출해 <b>액체로 응축</b>시킨다. 출력단자 <b>CFM</b> = 응축기 팬 모터."},
+  exp: {name:"팽창밸브", code:"",     role:"고온·고압의 액냉매를 <b>저온·저압으로 단열 팽창</b>시켜 증발하기 쉽게 만든다."},
+  evap:{name:"증발기",   code:"EFM",  role:"저압 액냉매가 <b>증발하며 주위의 열을 흡수</b>(냉각)한다. 출력단자 <b>EFM</b> = 증발기 팬 모터."},
+  sv:  {name:"전자밸브", code:"S.V",  role:"전원 투입 여부에 따라 <b>개·폐</b>되어 <b>냉매의 흐름을 통제</b>한다. 출력단자 <b>S.V</b>."}
+};
+
+/* ═══════════════ 탭 ═══════════════ */
+var tabs=document.querySelectorAll('nav.tabs button');
+tabs.forEach(function(b){b.addEventListener('click',function(){
+  tabs.forEach(function(x){x.classList.remove('on')}); b.classList.add('on');
+  document.querySelectorAll('section').forEach(function(s){s.classList.remove('on')});
+  document.getElementById(b.dataset.tab).classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+});});
+
+/* ═══════════════ 배우기: 계통도 인터랙션 ═══════════════ */
+(function(){
+  var info=document.getElementById('partInfo');
+  document.querySelectorAll('.cyc .part').forEach(function(g){
+    g.addEventListener('click',function(){
+      document.querySelectorAll('.cyc .part').forEach(function(x){x.classList.remove('sel')});
+      g.classList.add('sel');
+      var p=PARTS[g.dataset.p];
+      info.innerHTML='<b>'+p.name+(p.code?' ('+p.code+')':'')+'</b> — '+p.role;
+    });
+  });
+})();
+
+/* ═══════════════ 게임 엔진 ═══════════════ */
+var shuffle=function(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor((i+1)*(FX.rand?FX.rand():Math.random()));var t=a[i];a[i]=a[j];a[j]=t;}return a;};
+var GBody=document.getElementById('gBody'),GName=document.getElementById('gName'),
+    GNote=document.getElementById('gNote'),GProg=document.getElementById('gProg'),
+    GHud=document.getElementById('gHud');
+
+document.querySelectorAll('.gtile').forEach(function(t){
+  t.addEventListener('click',function(){startGame(t.dataset.game)});
+});
+document.getElementById('gBack').addEventListener('click',function(){
+  document.getElementById('gameRun').classList.remove('on');
+  document.getElementById('playHome').style.display='block';
+  FX.reset();
+});
+function openRun(name){
+  document.getElementById('playHome').style.display='none';
+  document.getElementById('gameRun').classList.add('on');
+  GName.textContent=name; GNote.textContent=''; GProg.style.width='0%';
+  FX.reset(); FX.hud(GHud);
+}
+function setProg(done,total){GProg.style.width=(done/total*100)+'%';}
+
+function startGame(g){
+  if(g==='circuit') gCircuit();
+  else if(g==='cycle') gCycle();
+  else if(g==='part') gPart();
+  else if(g==='safety') gSafety();
+}
+
+/* 공통: 4지선다 라운드 게임 */
+function runMCQ(opts){
+  // opts: {name, rounds:[{stem(html)|img, question, choices:[...], answer}], onDone}
+  openRun(opts.name);
+  var rounds=opts.rounds, i=0, miss=0;
+  function render(){
+    if(i>=rounds.length){ finish(); return; }
+    setProg(i,rounds.length);
+    var r=rounds[i];
+    var h='<div class="q"><span class="num">'+(i+1)+'/'+rounds.length+'</span>'+(r.question||'')+'</div>';
+    if(r.img) h+='<div class="diagram" style="margin-bottom:14px"><img src="'+r.img+'" alt=""></div>';
+    if(r.stem) h+=r.stem;
+    h+='<div class="opts">';
+    r._order=shuffle(r.choices);
+    r._order.forEach(function(c,k){ h+='<button class="opt" data-k="'+k+'">'+c+'</button>'; });
+    h+='</div>';
+    GBody.innerHTML=h;
+    GBody.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var pick=r._order[+btn.dataset.k];
+        var correct=(pick===r.answer);
+        GBody.querySelectorAll('.opt').forEach(function(b){
+          b.disabled=true;
+          if(r._order[+b.dataset.k]===r.answer) b.classList.add('ok');
+          else if(b===btn) b.classList.add('no');
+          else b.classList.add('dim');
+        });
+        if(correct){FX.ok(btn);} else {FX.no(btn); miss++;}
+        setTimeout(function(){i++;render();}, correct?620:1050);
+      });
+    });
+  }
+  function finish(){
+    setProg(rounds.length,rounds.length);
+    var got=rounds.length-miss;
+    GBody.innerHTML='';
+    FX.banner({icon:miss===0?'🏆':'🎉',title:miss===0?'퍼펙트!':'게임 완료!',
+      sub:got+' / '+rounds.length+' 정답 · 최고 콤보 x'+FX.best()+'<br>점수 '+FX.score(),
+      stars:FX.starsFor(miss),
+      btn:'게임 선택으로', onClose:function(){document.getElementById('gBack').click();}});
+  }
+  render();
+}
+
+/* G1 회로 이름 맞히기 */
+function gCircuit(){
+  var keys=Object.keys(CIRCUITS);
+  var pool=shuffle(keys.concat(keys)).slice(0,8); // 8라운드
+  var allNames=keys.map(function(k){return CIRCUITS[k].name;});
+  var rounds=pool.map(function(k){
+    return {question:'이 회로도가 나타내는 회로는?', img:CIRCUITS[k].img,
+      choices:allNames, answer:CIRCUITS[k].name};
+  });
+  runMCQ({name:'🔀 회로 이름 맞히기', rounds:rounds});
+}
+
+/* G3 부품 역할 맞히기 */
+function gPart(){
+  var Q=[
+    {q:'전원 투입 여부에 따라 개·폐되어 <b>냉매의 흐름을 통제</b>하는 것은?', a:'전자밸브'},
+    {q:'고온·고압 액냉매를 <b>저온·저압으로 단열 팽창</b>시키는 것은?', a:'팽창밸브'},
+    {q:'냉매를 흡입해 <b>고온·고압 가스로 압축</b>하는 것은?', a:'압축기'},
+    {q:'냉매가 <b>증발하며 주위 열을 흡수</b>(냉각)하는 곳은?', a:'증발기'},
+    {q:'고온·고압 가스의 열을 방출해 <b>액체로 응축</b>시키는 곳은?', a:'응축기'},
+    {q:'출력단자 <b>COMP</b>는 무엇의 모터인가?', a:'압축기'},
+    {q:'출력단자 <b>EFM</b>는 무엇의 팬 모터인가?', a:'증발기'},
+    {q:'출력단자 <b>CFM</b>는 무엇의 팬 모터인가?', a:'응축기'}
+  ];
+  var choices=['압축기','응축기','팽창밸브','증발기','전자밸브'];
+  var rounds=shuffle(Q).map(function(o){
+    return {question:o.q, choices:choices, answer:o.a};
+  });
+  runMCQ({name:'🧩 부품 역할 맞히기', rounds:rounds});
+}
+
+/* G4 안전 OX */
+function gSafety(){
+  openRun('🛡️ 안전 O · X');
+  var Q=shuffle([
+    {s:'접지는 전기 화재의 원인이다.', a:false, why:'접지는 화재·감전을 <b>예방</b>합니다. 원인은 누전·합선·과전류·설비노후.'},
+    {s:'누전, 합선, 과전류는 전기 화재의 원인이다.', a:true, why:'설비 노후까지 4가지가 대표적 원인.'},
+    {s:'안전관리의 주된 목적은 사고의 미연 방지다.', a:true, why:'사고를 미리 막는 것이 핵심 목적.'},
+    {s:'안전장치는 작업에 방해되면 임의로 제거해도 된다.', a:false, why:'부득이해도 <b>임의 제거 금지</b>. 항상 점검·준수.'},
+    {s:'가스는 사용 후 반드시 안전 밸브를 잠근다.', a:true, why:'사용 후 밸브 잠금은 기본 수칙.'},
+    {s:'가스 누출은 비눗물(거품)로 확인할 수 있다.', a:true, why:'새는 곳에서 거품이 생겨 확인 가능.'},
+    {s:'안전장치는 작업 전에 점검할 필요가 없다.', a:false, why:'안전장치는 <b>반드시 작업 전</b> 점검.'},
+    {s:'설비 노후도 전기 화재의 원인이 될 수 있다.', a:true, why:'절연 열화 등으로 화재 위험이 커집니다.'}
+  ]);
+  var i=0, miss=0;
+  function render(){
+    if(i>=Q.length){ finish(); return; }
+    setProg(i,Q.length);
+    var r=Q[i];
+    GBody.innerHTML='<div class="q"><span class="num">'+(i+1)+'/'+Q.length+'</span>다음 설명은 맞을까요?</div>'
+      +'<div class="card" style="text-align:center;font-size:16px;font-weight:800;line-height:1.6">'+r.s+'</div>'
+      +'<div class="oxrow"><button class="oxbtn o" data-v="1">⭕ 맞다</button><button class="oxbtn x" data-v="0">❌ 아니다</button></div>';
+    GBody.querySelectorAll('.oxbtn').forEach(function(b){
+      b.addEventListener('click',function(){
+        var pick=(b.dataset.v==='1');
+        var correct=(pick===r.a);
+        GBody.querySelectorAll('.oxbtn').forEach(function(x){x.disabled=true;});
+        if(correct) FX.ok(b); else {FX.no(b); miss++;}
+        GNote.innerHTML='정답: <b style="color:'+(r.a?'#34d399':'#fb7185')+'">'+(r.a?'맞다 ⭕':'아니다 ❌')+'</b> — '+r.why;
+        setTimeout(function(){GNote.innerHTML='';i++;render();},1350);
+      });
+    });
+  }
+  function finish(){
+    setProg(Q.length,Q.length);GBody.innerHTML='';
+    FX.banner({icon:miss===0?'🏆':'🎉',title:miss===0?'안전 마스터!':'게임 완료!',
+      sub:(Q.length-miss)+' / '+Q.length+' 정답 · 점수 '+FX.score(),
+      stars:FX.starsFor(miss),btn:'게임 선택으로',
+      onClose:function(){document.getElementById('gBack').click();}});
+  }
+  render();
+}
+
+/* G2 냉동 사이클 순서 */
+function gCycle(){
+  openRun('❄️ 냉동 사이클 순서');
+  var CORRECT=['압축기','응축기','팽창밸브','증발기'];
+  var placed=[];
+  function render(){
+    var line='<div class="orderline" id="line">';
+    if(placed.length===0) line+='<span class="slot">아래에서 순서대로 눌러 배치하세요 (냉매가 도는 순서)</span>';
+    placed.forEach(function(p,k){ line+='<span class="chip placed"><span class="step-badge">'+(k+1)+'</span>'+p+'</span>'; });
+    line+='</div>';
+    var remain=CORRECT.filter(function(c){return placed.indexOf(c)<0;});
+    var pool='<div class="pool">'+shuffle(remain).map(function(c){
+      return '<button class="chip" data-c="'+c+'">'+c+'</button>';}).join('')+'</div>';
+    GBody.innerHTML='<div class="q" style="font-size:15px">냉매는 어떤 순서로 순환할까요?</div>'+line+pool;
+    GBody.querySelectorAll('.pool .chip').forEach(function(b){
+      b.addEventListener('click',function(){
+        var c=b.dataset.c, expect=CORRECT[placed.length];
+        if(c===expect){ placed.push(c); FX.ok(b);
+          if(placed.length===CORRECT.length){ setProg(1,1); setTimeout(win,500); }
+          else { setProg(placed.length,CORRECT.length); setTimeout(render,420); }
+        } else { FX.no(b);
+          GNote.innerHTML='아직이에요! 지금 순서에 올 부품은 <b>'+expect+'</b> 입니다.';
+          setTimeout(function(){GNote.innerHTML='';},1400);
+        }
+      });
+    });
+  }
+  function win(){
+    GBody.innerHTML='<div class="card" style="text-align:center;line-height:1.9;font-weight:800">'
+      +'압축기 <span style="color:var(--cyan)">→</span> 응축기 <span style="color:var(--cyan)">→</span> 팽창밸브 <span style="color:var(--cyan)">→</span> 증발기 <span style="color:var(--cyan)">→</span> (다시 압축기)</div>';
+    FX.banner({icon:'❄️',title:'사이클 완성!',sub:'냉매 순환 순서를 마스터했어요 · 점수 '+FX.score(),
+      stars:3,btn:'게임 선택으로',onClose:function(){document.getElementById('gBack').click();}});
+  }
+  render();
+}
+
+/* ═══════════════ 점검 (CBT 20문항) ═══════════════ */
+var TEST=[
+ {q:'이 제어회로도가 나타내는 회로는?', img:'img/interlock.png',
+  o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:1,
+  e:'2개 이상 회로 중 한 개만 동작시키고 나머지는 막는 인터록 회로.'},
+ {q:'위 회로에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?',
+  o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:0,
+  e:'PB1 → Ry1과 RL 동작. (Ry1-b가 Ry2 회로를 차단)'},
+ {q:'위 회로에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?',
+  o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:3,
+  e:'PB2 → Ry2와 GL 동작. (Ry2-b가 Ry1 회로를 차단)'},
+ {q:'이 제어회로도가 나타내는 회로는?', img:'img/delay.png',
+  o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:2,
+  e:'타이머 설정 시간만큼 늦게 동작 → 지연(한시) 동작 회로.'},
+ {q:'이 제어회로도가 나타내는 회로는?', img:'img/fixedtime.png',
+  o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:3,
+  e:'동시에 동작하고 타이머 설정 시간 후 정지 → 일정 시간 동작 회로.'},
+ {q:'순간 동작으로 만들어진 입력 신호가 제거되어도 전자접촉기의 동작을 계속 지켜주는 회로는?',
+  o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:0,
+  e:'입력이 사라져도 스스로 동작을 유지 → 자기 유지 회로.'},
+ {q:'자기 유지 회로도에서 <b>자기유지접점</b>은?', img:'img/self-hold.png',
+  o:['PB1','PB2','Ry','RL','Ry-a'],a:4,
+  e:'PB1과 병렬로 붙어 전류를 스스로 유지하는 릴레이 a접점 = Ry-a.'},
+ {q:'출력단자 <b>COMP</b>가 나타내는 것은?',
+  o:['압축기','응축기','증발기','팽창밸브','전자밸브'],a:0,
+  e:'COMP = 압축기 모터의 출력 단자.'},
+ {q:'출력단자 <b>CFM</b>가 나타내는 것은?',
+  o:['압축기','응축기','증발기','팽창밸브','전자밸브'],a:1,
+  e:'CFM = 응축기(Condenser) 팬 모터의 출력 단자.'},
+ {q:'출력단자 <b>EFM</b>가 나타내는 것은?',
+  o:['압축기','응축기','증발기','팽창밸브','전자밸브'],a:2,
+  e:'EFM = 증발기(Evaporator) 팬 모터의 출력 단자.'},
+ {q:'전원 투입 여부에 따라 개·폐되어 냉매의 흐름을 통제하는 것은?',
+  o:['압축기','응축기','증발기','팽창밸브','전자밸브'],a:4,
+  e:'전자밸브(S.V) — 전원 ON/OFF로 냉매 흐름을 열고 닫음.'},
+ {q:'고온·고압의 액체 냉매를 저온·저압으로 단열 팽창시키는 것은?',
+  o:['압축기','응축기','증발기','팽창밸브','전자밸브'],a:3,
+  e:'팽창밸브 — 증발하기 쉽도록 저온·저압으로 단열 팽창.'},
+ {q:'냉동 사이클의 순환 순서로 옳은 것은?',
+  o:['압축기→응축기→팽창밸브→증발기','압축기→증발기→팽창밸브→응축기',
+     '응축기→압축기→증발기→팽창밸브','증발기→팽창밸브→응축기→압축기','팽창밸브→압축기→응축기→증발기'],a:0,
+  e:'압축 → 응축 → 팽창 → 증발 순으로 냉매가 순환.'},
+ {q:'냉매 속의 <b>수분과 이물질을 제거</b>하는 부품은?',
+  o:['수액기','필터 드라이어','액면계(사이트글라스)','팽창밸브','전자밸브'],a:1,
+  e:'필터 드라이어 — 냉매의 수분·이물질을 걸러 냄.'},
+ {q:'S.V가 나타내는 출력 단자로 옳은 것은?',
+  o:['압축기 모터','응축기 팬 모터','증발기 팬 모터','주배관용 전자밸브','실내기 모터'],a:3,
+  e:'S.V = 냉동 실험 장치 주배관용 전자밸브 출력 단자.'},
+ {q:'전기 화재의 원인으로 거리가 <b>먼</b> 것은?',
+  o:['누전','합선','접지','과전류','설비 노후'],a:2,
+  e:'접지는 화재·감전을 예방하는 것. 원인이 아님.'},
+ {q:'안전관리의 주된 목적을 바르게 설명한 것은?',
+  o:['사고 후 처리','사상자의 치료','생산원가 절감','작업장 관리','사고의 미연 방지'],a:4,
+  e:'안전관리의 핵심은 사고를 미리 막는 것.'},
+ {q:'가스 안전 수칙으로 <b>알맞지 않은</b> 것은?',
+  o:['사용 후에는 반드시 안전 밸브를 잠근다','가스가 새는지 비눗물로 확인한다',
+     '사용 전 냄새가 나는지 확인하고 환기시킨다','점화할 때 불이 붙었는지 확인한다',
+     '가스가 새면 환기팬을 켜 스파크로 배출한다'],a:4,
+  e:'누출 시 스위치·스파크는 폭발 위험! 밸브 잠그고 창문으로 환기해야 함.'},
+ {q:'안전장치의 취급에 관한 사항 중 <b>틀린</b> 것은?',
+  o:['반드시 작업 전에 점검한다','구조상 결함 유무를 항상 점검한다',
+     '불량할 때는 즉시 수정한 다음 작업한다','주의·통제 사항을 반드시 준수한다',
+     '작업 형편상 부득이하면 일시 제거해도 좋다'],a:4,
+  e:'안전장치는 부득이해도 임의로 제거하면 안 됨.'},
+ {q:'지연 동작 회로와 일정 시간 동작 회로의 차이로 옳은 것은?',
+  o:['지연=늦게 켜짐 / 일정시간=동시에 켜지고 늦게 꺼짐',
+     '지연=동시에 켜짐 / 일정시간=늦게 켜짐',
+     '둘 다 동시에 켜지고 동시에 꺼짐','둘 다 늦게 켜지고 늦게 꺼짐',
+     '지연=늦게 꺼짐 / 일정시간=늦게 켜짐'],a:0,
+  e:'지연동작=설정 시간 후 동작(늦게 ON), 일정시간동작=동시에 ON·설정 시간 후 정지(늦게 OFF).'}
+];
+
+var testAns=[];
+var LETTERS=['①','②','③','④','⑤'];
+document.getElementById('startTest').addEventListener('click',buildTest);
+document.getElementById('rRetry').addEventListener('click',function(){
+  document.getElementById('testResult').style.display='none'; buildTest();
+});
+document.getElementById('rReview').addEventListener('click',function(){
+  var rl=document.getElementById('reviewList');
+  rl.style.display = rl.style.display==='none'||!rl.style.display ? 'block':'none';
+});
+
+function buildTest(){
+  testAns=new Array(TEST.length).fill(-1);
+  document.getElementById('testIntro').style.display='none';
+  document.getElementById('testResult').style.display='none';
+  document.getElementById('testRun').style.display='block';
+  var html='';
+  TEST.forEach(function(t,i){
+    html+='<div class="tq" data-i="'+i+'"><div class="qh"><span class="n">'+(i+1)+'.</span>'+t.q+'</div>';
+    if(t.img) html+='<div class="qimg"><img src="'+t.img+'" alt=""></div>';
+    html+='<div class="tos">';
+    t.o.forEach(function(op,k){
+      html+='<button class="to" data-k="'+k+'"><span class="lab">'+LETTERS[k]+'</span>'+op+'</button>';
+    });
+    html+='</div><div class="expl"></div></div>';
+  });
+  document.getElementById('testList').innerHTML=html;
+  document.querySelectorAll('#testList .tq').forEach(function(tq){
+    var i=+tq.dataset.i;
+    tq.querySelectorAll('.to').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        if(tq.classList.contains('graded')) return;
+        testAns[i]=+btn.dataset.k;
+        tq.querySelectorAll('.to').forEach(function(b){b.classList.remove('pick');});
+        btn.classList.add('pick');
+      });
+    });
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('submitTest').addEventListener('click',function(){
+  var unanswered=testAns.reduce(function(n,v){return n+(v<0?1:0);},0);
+  if(unanswered>0 && !confirm('아직 '+unanswered+'문제를 안 풀었어요. 그래도 채점할까요?')) return;
+  gradeTest();
+});
+
+function gradeTest(){
+  var correct=0, wrong=[];
+  document.querySelectorAll('#testList .tq').forEach(function(tq){
+    var i=+tq.dataset.i, t=TEST[i], pick=testAns[i];
+    tq.classList.add('graded');
+    tq.querySelectorAll('.to').forEach(function(b){
+      var k=+b.dataset.k; b.disabled=true;
+      if(k===t.a) b.classList.add('correct');
+      else if(k===pick) b.classList.add('wrong');
+    });
+    tq.querySelector('.expl').innerHTML='💡 정답 '+LETTERS[t.a]+' — '+t.e;
+    if(pick===t.a) correct++; else wrong.push(i+1);
+  });
+  var total=TEST.length, score=Math.round(correct/total*100);
+  document.getElementById('testRun').style.display='none';
+  document.getElementById('testResult').style.display='block';
+  document.getElementById('rScore').textContent=score+'점';
+  document.getElementById('rSub').textContent=correct+' / '+total+' 정답'+(wrong.length?' · 오답 '+wrong.join(', ')+'번':' · 만점! 🎉');
+  // 결과 목록은 아래 시험지 재사용(리뷰 토글 시 스크롤)
+  document.getElementById('reviewList').style.display='none';
+  document.getElementById('rReview').onclick=function(){
+    document.getElementById('testResult').style.display='none';
+    document.getElementById('testRun').style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+  document.getElementById('rReview').textContent='시험지에서 오답·해설 보기';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(score===100) FX.banner({icon:'🏆',title:'만점!',sub:'20문제 전부 정답이에요!',stars:3,btn:'결과 제출하기',
+      onClose:submitResult});
+  else setTimeout(function(){},0);
+  // 결과 제출
+  window.__lastResult={score:score,correct:correct,total:total,wrong:wrong};
+  if(score!==100) setTimeout(submitResult,600);
+  function submitResult(){
+    if(window.ResultCollector) ResultCollector.open({
+      score:score, correct:correct, total:total, wrong:wrong,
+      labels:{score:'점수',correct:'정답'}
+    });
+  }
+}
+</script>
+</body>
+</html>
