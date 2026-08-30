@@ -200,7 +200,7 @@ svg.cyc{display:block;width:100%;height:auto}
   <div class="card">
     <div class="tagrow"><span class="tag cy">자기유지</span><span class="tag">Ry-a</span></div>
     <h3>자기 유지 회로</h3>
-    <div class="diagram"><img src="img/self-hold.png" alt="자기유지 회로도"><div class="cap">자기 유지 회로도</div></div>
+    <div class="diagram"><img src="img/ckt-3.png" alt="자기유지 회로도"><div class="cap">자기 유지 회로도</div></div>
     <div class="def">푸시버튼처럼 <b>순간 동작</b>으로 만들어진 입력 신호가 전자접촉기에 가해지면,
       입력 신호가 <b>제거되어도 동작을 계속 지켜주는</b> 회로.</div>
     <div class="kv"><span class="k">자기유지접점</span><span class="v"><b style="color:var(--amber)">Ry-a</b> (릴레이 a접점) — PB1과 병렬로 붙어 스스로 전류를 유지</div>
@@ -210,7 +210,7 @@ svg.cyc{display:block;width:100%;height:auto}
   <div class="card">
     <div class="tagrow"><span class="tag cy">인터록</span><span class="tag">Ry-b</span></div>
     <h3>인터록 회로</h3>
-    <div class="diagram"><img src="img/interlock.png" alt="인터록 회로도"><div class="cap">인터록 회로도</div></div>
+    <div class="diagram"><img src="img/ckt-1.png" alt="인터록 회로도"><div class="cap">인터록 회로도</div></div>
     <div class="def"><b>2개 이상의 회로</b> 중에서 <b>한 개 회로만 동작</b>시키고,
       나머지 회로는 동작할 수 없도록 서로 막아 주는(선입 우선) 회로.</div>
     <div class="kv">
@@ -222,7 +222,7 @@ svg.cyc{display:block;width:100%;height:auto}
   <div class="card">
     <div class="tagrow"><span class="tag cy">지연동작</span><span class="tag">타이머 T</span></div>
     <h3>지연 동작 회로 (한시동작)</h3>
-    <div class="diagram"><img src="img/delay.png" alt="지연동작 회로도"><div class="cap">지연 동작 회로도 · 타임차트</div></div>
+    <div class="diagram"><img src="img/ckt-4.png" alt="지연동작 회로도"><div class="cap">지연 동작 회로도 · 타임차트</div></div>
     <div class="def">타이머에 의해 <b>설정된 시간만큼 늦게 동작</b>하는 회로.
       동작은 늦지만 <b>복귀는 타이머 코일과 함께</b> 된다. PB1을 ON–OFF 조작하면
       설정한 일정 시간 뒤에 부하가 동작.</div>
@@ -231,7 +231,7 @@ svg.cyc{display:block;width:100%;height:auto}
   <div class="card">
     <div class="tagrow"><span class="tag cy">일정시간동작</span><span class="tag">타이머 T</span></div>
     <h3>일정 시간 동작 회로 (한시복귀)</h3>
-    <div class="diagram"><img src="img/fixedtime.png" alt="일정시간동작 회로도"><div class="cap">일정 시간 동작 회로도 · 타임차트</div></div>
+    <div class="diagram"><img src="img/ckt-2.png" alt="일정시간동작 회로도"><div class="cap">일정 시간 동작 회로도 · 타임차트</div></div>
     <div class="def"><b>동시에 동작</b>하고 <b>늦게 복귀</b>되는 회로.
       PB를 ON–OFF 조작함과 동시에 부하가 동작하고,
       타이머의 <b>시간 설정 후에 정지</b>(복귀)한다.</div>
@@ -325,10 +325,10 @@ svg.cyc{display:block;width:100%;height:auto}
 <section id="test">
   <div id="testIntro">
     <h2 class="sec">점검 — 졸업고사 대비</h2>
-    <p class="hint">실제 졸업고사 유형을 바탕으로 만든 문제 은행(총 34문항)입니다. 한 번에 풀고 제출하면 점수·오답·해설을 확인할 수 있어요. 시간 제한은 없습니다.</p>
+    <p class="hint">실제 졸업고사 유형을 바탕으로 만든 문제 은행(총 32문항)입니다. 한 번에 풀고 제출하면 점수·오답·해설을 확인할 수 있어요. 시간 제한은 없습니다.</p>
     <div class="card"><p>📋 객관식 · 회로 / 계통도 / 안전<br>✅ 제출하면 채점 후 <b>선생님께 결과가 전송</b>됩니다.</p></div>
     <button class="btn wide" id="startTest20" style="margin-bottom:9px">⚡ 빠른 20문항 (무작위 출제)</button>
-    <button class="btn wide ghost" id="startTestAll">📚 전체 34문항 풀기</button>
+    <button class="btn wide ghost" id="startTestAll">📚 전체 32문항 풀기</button>
   </div>
 
   <div id="testRun" style="display:none">
@@ -426,10 +426,10 @@ svg.cyc{display:block;width:100%;height:auto}
 <script>
 /* ═══════════════ 데이터 ═══════════════ */
 var CIRCUITS = {
-  self:   {name:"자기 유지 회로",   img:"img/self-hold.png"},
-  inter:  {name:"인터록 회로",       img:"img/interlock.png"},
-  delay:  {name:"지연 동작 회로",     img:"img/delay.png"},
-  fixed:  {name:"일정 시간 동작 회로", img:"img/fixedtime.png"}
+  self:   {name:"자기 유지 회로",   img:"img/ckt-3.png"},
+  inter:  {name:"인터록 회로",       img:"img/ckt-1.png"},
+  delay:  {name:"지연 동작 회로",     img:"img/ckt-4.png"},
+  fixed:  {name:"일정 시간 동작 회로", img:"img/ckt-2.png"}
 };
 var PARTS = {
   comp:{name:"압축기",   code:"COMP", role:"저온·저압의 냉매 가스를 흡입해 <b>고온·고압 가스</b>로 압축한다. 출력단자 <b>COMP</b> = 압축기 모터."},
@@ -712,25 +712,25 @@ function gCycle(){
 
 /* ═══════════════ 점검 (CBT 20문항) ═══════════════ */
 var TEST=[
- {q:'이 제어회로도가 나타내는 회로는?', img:'img/interlock.png',
+ {q:'이 제어회로도가 나타내는 회로는?', img:'img/ckt-1.png',
   o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:1,
   e:'2개 이상 회로 중 한 개만 동작시키고 나머지는 막는 인터록 회로.'},
- {q:'아래 회로도에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
+ {q:'아래 회로도에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/ckt-1.png',
   o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:0,
   e:'PB1 → Ry1과 RL 동작. (Ry1-b가 Ry2 회로를 차단)'},
- {q:'아래 회로도에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
+ {q:'아래 회로도에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/ckt-1.png',
   o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:3,
   e:'PB2 → Ry2와 GL 동작. (Ry2-b가 Ry1 회로를 차단)'},
- {q:'이 제어회로도가 나타내는 회로는?', img:'img/delay.png',
+ {q:'이 제어회로도가 나타내는 회로는?', img:'img/ckt-4.png',
   o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:2,
   e:'타이머 설정 시간만큼 늦게 동작 → 지연(한시) 동작 회로.'},
- {q:'이 제어회로도가 나타내는 회로는?', img:'img/fixedtime.png',
+ {q:'이 제어회로도가 나타내는 회로는?', img:'img/ckt-2.png',
   o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:3,
   e:'동시에 동작하고 타이머 설정 시간 후 정지 → 일정 시간 동작 회로.'},
  {q:'순간 동작으로 만들어진 입력 신호가 제거되어도 전자접촉기의 동작을 계속 지켜주는 회로는?',
   o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:0,
   e:'입력이 사라져도 스스로 동작을 유지 → 자기 유지 회로.'},
- {q:'자기 유지 회로도에서 <b>자기유지접점</b>은?', img:'img/self-hold.png',
+ {q:'자기 유지 회로도에서 <b>자기유지접점</b>은?', img:'img/ckt-3.png',
   o:['PB1','PB2','Ry','RL','Ry-a'],a:4,
   e:'PB1과 병렬로 붙어 전류를 스스로 유지하는 릴레이 a접점 = Ry-a.'},
  {q:'출력단자 <b>COMP</b>가 나타내는 것은?',
@@ -780,7 +780,7 @@ var TEST=[
      '둘 다 동시에 켜지고 동시에 꺼짐','둘 다 늦게 켜지고 늦게 꺼짐',
      '지연=늦게 꺼짐 / 일정시간=늦게 켜짐'],a:0,
   e:'지연동작=설정 시간 후 동작(늦게 ON), 일정시간동작=동시에 ON·설정 시간 후 정지(늦게 OFF).'},
- {q:'자기 유지 회로에서 <b>정지(복귀)</b>시키는 푸시버튼은?', img:'img/self-hold.png',
+ {q:'자기 유지 회로에서 <b>정지(복귀)</b>시키는 푸시버튼은?', img:'img/ckt-3.png',
   o:['PB1','PB2','RL','Ry-a','N.F.B'],a:1,
   e:'PB1은 기동(ON), PB2는 정지(OFF). 자기유지접점 Ry-a가 유지시켜 줌.'},
  {q:'인터록 회로에서 상대 회로를 <b>동작하지 못하게 막는</b> 접점은?',
@@ -807,18 +807,12 @@ var TEST=[
  {q:'냉동 사이클에서 <b>압축기 바로 다음</b>에 오는 것은?',
   o:['증발기','응축기','팽창밸브','전자밸브','수액기'],a:1,
   e:'압축기 → 응축기 → 팽창밸브 → 증발기 순.'},
- {q:'다음 중 전기 화재를 <b>예방</b>하기 위한 것은?',
-  o:['누전','합선','접지','과전류','설비 노후'],a:2,
-  e:'접지는 화재·감전을 예방. 나머지는 화재의 원인.'},
  {q:'가스가 새는 것을 발견했을 때 <b>가장 먼저</b> 할 일은?',
   o:['환기팬을 켠다','전등을 켜서 확인한다','밸브를 잠그고 창문을 열어 환기한다','성냥불로 새는 곳을 찾는다','그대로 계속 사용한다'],a:2,
   e:'스위치·불꽃은 폭발 위험! 밸브를 잠그고 창문으로 자연 환기.'},
  {q:'안전장치에 대한 설명으로 <b>옳은</b> 것은?',
   o:['작업에 방해되면 제거한다','작업 전 반드시 점검한다','불량해도 그대로 사용한다','점검할 필요가 없다','작업이 끝난 뒤에만 점검한다'],a:1,
   e:'안전장치는 작업 전 반드시 점검하고, 임의 제거 금지.'},
- {q:'출력단자 <b>COMP</b>는 무엇의 모터 출력 단자인가?',
-  o:['응축기','압축기','증발기','실내기','송풍기'],a:1,
-  e:'COMP = 압축기 모터의 출력 단자.'},
  {q:'전기 화재의 <b>원인</b>에 해당하는 것끼리 묶인 것은?',
   o:['누전·합선·과전류·설비 노후','접지·누전·합선·과전류','접지·절연·차단·환기','냉각·압축·응축·팽창','점검·정비·교체·청소'],a:0,
   e:'전기 화재 원인 4가지: 누전·합선(단락)·과전류·설비 노후.'}
