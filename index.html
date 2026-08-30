@@ -299,7 +299,7 @@ svg.cyc{display:block;width:100%;height:auto}
 <section id="play">
   <div id="playHome">
     <h2 class="sec">게임으로 익히기</h2>
-    <p class="hint">4가지 미니게임. 콤보를 이어 별 3개에 도전!</p>
+    <p class="hint">5가지 미니게임. 콤보를 이어 별 3개에 도전!</p>
     <div class="grid2">
       <button class="gtile" data-game="circuit"><div class="ico">🔀</div><div class="t">회로 이름 맞히기</div><div class="d">회로도를 보고 4가지 회로 중 고르기</div></button>
       <button class="gtile" data-game="cycle"><div class="ico">❄️</div><div class="t">냉동 사이클 순서</div><div class="d">냉매가 도는 순서대로 부품 배열</div></button>
@@ -380,7 +380,7 @@ svg.cyc{display:block;width:100%;height:auto}
     var el=document.getElementById('rk-badge');
     if(!el){
       el=document.createElement('div'); el.id='rk-badge';
-      el.style.cssText='position:fixed;right:10px;bottom:10px;z-index:9998;'
+      el.style.cssText='position:fixed;right:10px;bottom:56px;z-index:9998;'
         +'font-size:11.5px;opacity:.9;pointer-events:none';
       document.body.appendChild(el);
     }
@@ -715,10 +715,10 @@ var TEST=[
  {q:'이 제어회로도가 나타내는 회로는?', img:'img/interlock.png',
   o:['자기 유지 회로','인터록 회로','지연 동작 회로','일정 시간 동작 회로','온도·압력·제상 회로'],a:1,
   e:'2개 이상 회로 중 한 개만 동작시키고 나머지는 막는 인터록 회로.'},
- {q:'아래 인터록 회로에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
+ {q:'아래 회로도에서 푸시버튼 <b>PB1</b>을 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
   o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:0,
   e:'PB1 → Ry1과 RL 동작. (Ry1-b가 Ry2 회로를 차단)'},
- {q:'아래 인터록 회로에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
+ {q:'아래 회로도에서 푸시버튼 <b>PB2</b>를 눌렀을 때 동작되는 릴레이와 램프는?', img:'img/interlock.png',
   o:['Ry1, RL','Ry2, RL','Ry1, GL','Ry2, GL','Ry1, Ry2, GL'],a:3,
   e:'PB2 → Ry2와 GL 동작. (Ry2-b가 Ry1 회로를 차단)'},
  {q:'이 제어회로도가 나타내는 회로는?', img:'img/delay.png',
