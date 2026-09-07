@@ -164,6 +164,14 @@ svg.cyc{display:block;width:100%;height:auto}
 .btn.wide{width:100%}
 .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--sub)}
 .btn:disabled{opacity:.5;cursor:default}
+.slidebtn{background:linear-gradient(135deg,#7c3aed,#2563eb);margin:2px 0 10px}
+/* 수업 슬라이드 그림 — 이 도구의 SVG 는 520x300 으로 세로가 길어
+   기본값(width:100%)대로 두면 700px 까지 자라 한 화면을 넘긴다. 높이를 묶어 둔다.
+   (공용 뷰어 links/board-pro.js 는 고치지 않는다) */
+#bp .bp-fig svg{width:100%;height:auto;max-height:26vh}
+#bp #bp-in.compact .bp-fig svg{max-height:15vh}
+#bp .bp-fig img{max-height:34vh}
+#bp #bp-in.compact .bp-fig img{max-height:18vh}
 
 .scorebar{background:linear-gradient(150deg,#13244d,#0c1730);border:1px solid #2f4a80;
   border-radius:16px;padding:18px;text-align:center;margin-bottom:14px}
@@ -193,6 +201,10 @@ svg.cyc{display:block;width:100%;height:auto}
 
 <!-- ══════════ 배우기 ══════════ -->
 <section id="learn" class="on">
+
+  <!-- 교실 화면용 슬라이드 진입 — 원고 lesson.js, 화면 links/board-pro.js -->
+  <button class="btn wide slidebtn" type="button" onclick="openSlides()">📽️ 수업 슬라이드 열기</button>
+  <p class="hint" style="text-align:center;margin:-2px 2px 4px">교실 앞 화면에 띄우는 27장. 요점 → 발문 → 퀴즈 순으로 열리고, 화면 어디든 바로 판서됩니다.</p>
 
   <h2 class="sec">① 시퀀스 제어 회로 4가지</h2>
   <p class="hint">푸시버튼·릴레이·타이머로 만든 기본 회로입니다. 그림은 실제 시험에 나오는 회로도예요. 이름과 동작을 짝지어 기억하세요.</p>
@@ -910,6 +922,40 @@ function gradeTest(){
       labels:{score:'점수',correct:'정답'}
     });
   }
+}
+</script>
+<!-- 수업 슬라이드 : 원고(lesson.js) + 화면(links/board-pro.js 공용 뷰어).
+     뷰어 사본은 두지 않는다 — 고칠 일이 생기면 links 저장소에서 고친다. -->
+<script src="lesson.js"></script>
+<script src="https://hongyul67-cpu.github.io/links/board-pro.js"></script>
+<script>
+/* ── 수업 슬라이드 (교실 화면용) ──────────────────────────
+   배우기는 학생이 혼자 읽는 줄글 카드다. 이것은 교실 앞에 띄우는 슬라이드다.
+   펜·형광펜·지우개·가리개·타이머·번호뽑기·전체화면은 뷰어 안에 들어 있다. */
+function openSlides(){
+  if(!window.BoardPro || !(window.LESSON||[]).length){
+    alert('수업 슬라이드를 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.'); return;
+  }
+  var ALL=window.LESSON, FIG=window.FIGS||{};
+  var units=[]; ALL.forEach(function(s){ if(units.indexOf(s.u)<0) units.push(s.u); });
+  var menu=units.map(function(u){
+    var list=ALL.filter(function(s){return s.u===u;});
+    return { icon:'📊', title:u, desc:'슬라이드 '+list.length+'장 · '+list[0].t,
+             run:{ kind:'lesson', deck:list } };
+  });
+  menu.push({ icon:'📚', wide:true, title:'전체 이어서 ('+ALL.length+'장)',
+              desc:'시퀀스 제어 기초부터 안전까지 순서대로 진행합니다.',
+              run:{ kind:'lesson', deck:ALL } });
+  menu.push({ icon:'⬜', wide:true, title:'빈 칠판',
+              desc:'슬라이드 없이 판서만. 회로도를 직접 그려 설명할 때.',
+              run:{ kind:'blank' } });
+  BoardPro.open({
+    title:'📽️ 공조냉동 자동제어 · 수업 슬라이드',
+    sub:'요점 → <b>발문</b> → 퀴즈 → 정답을 하나씩 엽니다. 화면 어디든 바로 판서됩니다.<br>'+
+        '요점 속 <b>파란 빈칸</b>은 눌러야 답이 보입니다.',
+    menu: menu,
+    fig: function(s){ return (s.fig && FIG[s.fig]) ? FIG[s.fig]() : ''; }
+  });
 }
 </script>
 <script src="https://hongyul67-cpu.github.io/links/backbar.js"></script>
